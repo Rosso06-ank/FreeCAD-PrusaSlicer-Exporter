@@ -1,1 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package format="1" xmlns="https://wiki.freecad.org/Package_Metadata">
+  <name>FreeCAD PrusaSlicer Exporter</name>
+  <description>Export selected FreeCAD faces, bodies, and visible objects directly to PrusaSlicer.</description>
+  <version>0.1.0</version>
+  <date>2026-11-14</date>
+  <maintainer email="">Rosso06-ank</maintainer>
+  <license file="LICENSE">LGPL-2.1</license>
+  <url type="repository">https://github.com/Rosso06-ank/FreeCAD-PrusaSlicer-Exporter</url>
+  <content>
+    <workbench>
+      <name>PrusaSlicer Exporter</name>
+      <classname>PrusaSlicerExporterWorkbench</classname>
+      <subdirectory>.</subdirectory>
+    </workbench>
+  </content>
+</package>
 
