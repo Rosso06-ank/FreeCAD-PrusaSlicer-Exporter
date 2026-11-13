@@ -1,35 +1,21 @@
-import FreeCAD
-import FreeCADGui as Gui
-import os
-import sys
-import traceback
+# -*- coding: utf-8 -*-
+"""
+FreeCAD PrusaSlicer Exporter
+---------------------------
+FreeCAD Workbench Addon
 
-addon = os.path.join(
-    FreeCAD.getUserAppDataDir(),
-    "Mod",
-    "FreeCAD-PrusaSlicer-Exporter"
+Features:
+- Export selected Body or Part
+- Export selected Faces
+- Export multiple objects
+- Export without saving FreeCAD document
+- Send STL files directly to PrusaSlicer
+
+Workbench registration: InitGui.py
+"""
+
+import FreeCAD as App
+
+App.Console.PrintLog(
+    "[PrusaSlicer Exporter] Module initialized.\n"
 )
-
-if addon not in sys.path:
-    sys.path.insert(0, addon)
-
-try:
-    initgui = os.path.join(addon, "InitGui.py")
-
-    with open(initgui, encoding="utf-8") as f:
-        code = compile(f.read(), initgui, "exec")
-
-    exec(code, {
-        "__file__": initgui,
-        "__name__": "__main__"
-    })
-
-    print("Workbench başarıyla yüklendi!")
-
-except Exception:
-    traceback.print_exc()
-
-print([
-    name for name in Gui.listWorkbenches()
-    if "Prusa" in name
-])
