@@ -89,14 +89,33 @@ def get_shapes(doc):
 
 
 def slicer_command():
+    """Return argv for host PrusaSlicer or a native installation."""
+    # Flatpak FreeCAD cannot normally execute host /usr/bin/prusa-slicer.
+    # flatpak-spawn --host launches it outside the sandbox.
+    is_flatpak = os.path.exists('/.flatpak-info') or bool(os.environ.get('FLATPAK_ID'))
+    if is_flatpak:
+        spawn = shutil.which('flatpak-spawn')
+        if not spawn:
+            raise RuntimeError('flatpak-spawn not found inside FreeCAD Flatpak.')
+        return [spawn, '--host', SLICER_PATH or '/usr/bin/prusa-slicer']
     if SLICER_PATH:
         if not os.path.isfile(SLICER_PATH):
             raise RuntimeError('PrusaSlicer not found: ' + SLICER_PATH)
-        return SLICER_PATH
+        return [SLICER_PATH]
     exe = shutil.which('prusa-slicer') or shutil.which('PrusaSlicer')
     if not exe:
-        raise RuntimeError('PrusaSlicer not found in PATH. Set SLICER_PATH in PrusaExporter.py.')
-    return exe
+        raise RuntimeError('PrusaSlicer not found in PATH. Set SLICER_PATH.')
+    return [exe]
+
+
+def export_directory():
+    """Use a persistent shared host path, not sandbox-private /tmp."""
+    folder = os.path.join(os.path.expanduser('~'), '.var', 'app',
+                          'org.freecad.FreeCAD', 'data', 'prusa-exporter') if (
+        os.path.exists('/.flatpak-info') or os.environ.get('FLATPAK_ID')) else (
+        os.path.join(os.path.expanduser('~'), '.local', 'share', 'freecad-prusa-exporter'))
+    os.makedirs(folder, exist_ok=True)
+    return folder
 
 
 def export_to_slicer():
@@ -117,13 +136,13 @@ def export_to_slicer():
             result.addMesh(mesh)
     if not result.CountFacets:
         raise RuntimeError('No STL triangles generated.')
-    folder = tempfile.mkdtemp(prefix='freecad_prusaslicer_')
+    folder = tempfile.mkdtemp(prefix='export_', dir=export_directory())
     filename = re.sub(r'[^a-zA-Z0-9_.-]+', '_', doc.Label).strip('._') or 'freecad'
     path = os.path.join(folder, filename + '.stl')
     result.write(path)
     log('Exported: ' + ', '.join(names))
     log('STL: ' + path)
-    subprocess.Popen([slicer_command(), '--single-instance', path],
+    subprocess.Popen(slicer_command() + ['--single-instance', path],
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                      start_new_session=True)
     if FACE_THICKNESS_MM == 0 and any('.Face' in n for n in names):
@@ -134,7 +153,7 @@ def export_to_slicer():
 class SendCommand:
     def GetResources(self):
         return {
-            'Pixmap': os.path.join(os.path.dirname(__file__), 'Resources', 'icons', 'PrusaExporter.svg'),
+            'Pixmap': os.path.join(App.getUserAppDataDir(), 'Mod', 'FreeCAD-PrusaSlicer-Exporter', 'Resources', 'icons', 'PrusaExporter.svg'),
             'MenuText': 'Send to PrusaSlicer',
             'ToolTip': 'Export selected faces or solids to PrusaSlicer (no save needed)'
         }
@@ -148,4 +167,3 @@ class SendCommand:
 
     def IsActive(self):
         return App.ActiveDocument is not None
-
