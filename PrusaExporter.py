@@ -13,7 +13,7 @@ import Mesh
 import MeshPart
 
 # Editable defaults; face thickness 0 produces an open, non-printable surface.
-FACE_THICKNESS_MM = 0.0
+FACE_THICKNESS_MM = 0.2
 LINEAR_DEFLECTION_MM = 0.10
 ANGULAR_DEFLECTION_RAD = 0.35
 SLICER_PATH = ''  # Optional absolute path, e.g. /usr/bin/prusa-slicer
